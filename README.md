@@ -1,86 +1,69 @@
-using Microsoft.EntityFrameworkCore;
-using UniversityCMS.Data;
-using UniversityCMS.Models;
-
-namespace UniversityCMS.Services
-{
-    public class AdminService
-    {
-        private readonly ApplicationDbContext _db;
-
-        public AdminService(ApplicationDbContext db)
-        {
-            _db = db;
-        }
-
-        public async Task<Admin?> LoginAsync(string email, string password)
-            => await _db.Admins.FirstOrDefaultAsync(a => a.Email == email && a.Password == password);
-
-        public async Task AddFacultyAsync(Faculty faculty)
-        {
-            _db.Faculties.Add(faculty);
-            await _db.SaveChangesAsync();
-        }
-
-        public async Task AddRegistrarAsync(Registrar registrar)
-        {
-            _db.Registrars.Add(registrar);
-            await _db.SaveChangesAsync();
-        }
-
-        public async Task<List<Faculty>> GetAllFacultyAsync()
-            => await _db.Faculties.ToListAsync();
-
-        public async Task<List<Registrar>> GetAllRegistrarsAsync()
-            => await _db.Registrars.ToListAsync();
-
-        // ---- Search Faculty ----
-        public async Task<List<Faculty>> SearchFacultyAsync(string name, string department)
-        {
-            var query = _db.Faculties.AsQueryable();
-
-            if (!string.IsNullOrEmpty(name))
-                query = query.Where(f => f.Name.Contains(name));
-
-            if (!string.IsNullOrEmpty(department))
-                query = query.Where(f => f.Department.Contains(department));
-
-            return await query.ToListAsync();
-        }
-
-        // ---- Delete Faculty ----
-        public async Task DeleteFacultyAsync(int id)
-        {
-            var faculty = await _db.Faculties.FindAsync(id);
-            if (faculty != null)
-            {
-                _db.Faculties.Remove(faculty);
-                await _db.SaveChangesAsync();
-            }
-        }
-
-
-        // ---- Search Registrar ----
-        public async Task<List<Registrar>> SearchRegistrarAsync(string name)
-        {
-            var query = _db.Registrars.AsQueryable();
-
-            if (!string.IsNullOrEmpty(name))
-                query = query.Where(r => r.Name.Contains(name));
-
-            return await query.ToListAsync();
-        }
-
-
-        // ---- Delete Registrar ----
-        public async Task DeleteRegistrarAsync(int id)
-        {
-            var registrar = await _db.Registrars.FindAsync(id);
-            if (registrar != null)
-            {
-                _db.Registrars.Remove(registrar);
-                await _db.SaveChangesAsync();
-            }
-        }
-    }
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    var faculties  = ViewBag.Faculties  as List<UniversityCMS.Models.Faculty>   ?? new();
+    var registrars = ViewBag.Registrars as List<UniversityCMS.Models.Registrar> ?? new();
 }
+
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2>Admin Dashboard</h2>
+        <div>
+            <a href="/Admin/AddFaculty"   class="btn btn-primary" style="margin-right:8px;">+ Add Faculty</a>
+            <a href="/Admin/AddRegistrar" class="btn btn-success">+ Add Registrar</a>
+            <a href="/Admin/RemoveFaculty" class="btn btn-danger">Remove Faculty</a>
+            <a href="/Admin/RemoveRegistrar" class="btn btn-warning">Remove Registrar</a>
+        </div>
+    </div>
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success">@TempData["Message"]</div>
+    }
+
+    <h3>Faculty Members</h3>
+    @if (!faculties.Any())
+    {
+        <p style="color:#888; margin-bottom:16px;">No faculty added yet.</p>
+    }
+    else
+    {
+        <table style="margin-bottom:24px;">
+            <thead>
+                <tr><th>Name</th><th>Email</th><th>Department</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var f in faculties)
+                {
+                    <tr>
+                        <td>@f.Name</td>
+                        <td>@f.Email</td>
+                        <td>@f.Department</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <h3>Registrars</h3>
+    @if (!registrars.Any())
+    {
+        <p style="color:#888;">No registrars added yet.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr><th>Name</th><th>Email</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var r in registrars)
+                {
+                    <tr>
+                        <td>@r.Name</td>
+                        <td>@r.Email</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
