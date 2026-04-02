@@ -1,10 +1,9 @@
-@model List<UniversityCMS.Models.Faculty>
+@model List<UniversityCMS.Models.Registrar>
 
-<h2>Remove Faculty</h2>
+<h2>Remove Registrar</h2>
 
 <form method="post">
-    <input type="text" name="name" placeholder="Faculty Name" />
-    <input type="text" name="department" placeholder="Department" />
+    <input type="text" name="name" placeholder="Registrar Name" />
     <button type="submit" class="btn btn-primary">Search</button>
 </form>
 
@@ -15,20 +14,18 @@
             <tr>
                 <th>Name</th>
                 <th>Email</th>
-                <th>Department</th>
                 <th>Action</th>
             </tr>
         </thead>
 
         <tbody>
-            @foreach (var f in Model)
+            @foreach (var r in Model)
             {
                 <tr>
-                    <td>@f.Name</td>
-                    <td>@f.Email</td>
-                    <td>@f.Department</td>
+                    <td>@r.Name</td>
+                    <td>@r.Email</td>
                     <td>
-                        <a href="/Admin/DeleteFaculty/@f.FacultyId"
+                        <a href="/Admin/DeleteRegistrar/@r.RegistrarId"
                            class="btn btn-danger">Remove</a>
                     </td>
                 </tr>
