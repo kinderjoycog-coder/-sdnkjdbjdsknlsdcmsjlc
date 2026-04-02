@@ -1,69 +1,38 @@
-@{
-    ViewData["Title"] = "Admin Dashboard";
-    var faculties  = ViewBag.Faculties  as List<UniversityCMS.Models.Faculty>   ?? new();
-    var registrars = ViewBag.Registrars as List<UniversityCMS.Models.Registrar> ?? new();
+@model List<UniversityCMS.Models.Faculty>
+
+<h2>Remove Faculty</h2>
+
+<form method="post">
+    <input type="text" name="name" placeholder="Faculty Name" />
+    <input type="text" name="department" placeholder="Department" />
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+@if (Model != null)
+{
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var f in Model)
+            {
+                <tr>
+                    <td>@f.Name</td>
+                    <td>@f.Email</td>
+                    <td>@f.Department</td>
+                    <td>
+                        <a href="/Admin/DeleteFaculty/@f.FacultyId"
+                           class="btn btn-danger">Remove</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }
-
-<div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h2>Admin Dashboard</h2>
-        <div>
-            <a href="/Admin/AddFaculty"   class="btn btn-primary" style="margin-right:8px;">+ Add Faculty</a>
-            <a href="/Admin/AddRegistrar" class="btn btn-success">+ Add Registrar</a>
-            <a href="/Admin/RemoveFaculty" class="btn btn-danger">Remove Faculty</a>
-            <a href="/Admin/RemoveRegistrar" class="btn btn-warning">Remove Registrar</a>
-        </div>
-    </div>
-
-    @if (TempData["Message"] != null)
-    {
-        <div class="alert alert-success">@TempData["Message"]</div>
-    }
-
-    <h3>Faculty Members</h3>
-    @if (!faculties.Any())
-    {
-        <p style="color:#888; margin-bottom:16px;">No faculty added yet.</p>
-    }
-    else
-    {
-        <table style="margin-bottom:24px;">
-            <thead>
-                <tr><th>Name</th><th>Email</th><th>Department</th></tr>
-            </thead>
-            <tbody>
-                @foreach (var f in faculties)
-                {
-                    <tr>
-                        <td>@f.Name</td>
-                        <td>@f.Email</td>
-                        <td>@f.Department</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-
-    <h3>Registrars</h3>
-    @if (!registrars.Any())
-    {
-        <p style="color:#888;">No registrars added yet.</p>
-    }
-    else
-    {
-        <table>
-            <thead>
-                <tr><th>Name</th><th>Email</th></tr>
-            </thead>
-            <tbody>
-                @foreach (var r in registrars)
-                {
-                    <tr>
-                        <td>@r.Name</td>
-                        <td>@r.Email</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-</div>
