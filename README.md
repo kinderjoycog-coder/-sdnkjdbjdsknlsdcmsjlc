@@ -1,133 +1,86 @@
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using UniversityCMS.Data;
 using UniversityCMS.Models;
-using UniversityCMS.Services;
 
-namespace UniversityCMS.Controllers
+namespace UniversityCMS.Services
 {
-    public class AdminController : Controller
+    public class AdminService
     {
-        private readonly AdminService _adminService;
+        private readonly ApplicationDbContext _db;
 
-        public AdminController(AdminService adminService)
+        public AdminService(ApplicationDbContext db)
         {
-            _adminService = adminService;
+            _db = db;
         }
 
-        // ---- Auth ----
+        public async Task<Admin?> LoginAsync(string email, string password)
+            => await _db.Admins.FirstOrDefaultAsync(a => a.Email == email && a.Password == password);
 
-        [HttpGet]
-        public IActionResult Login() => View();
-
-        [HttpPost]
-        public async Task<IActionResult> Login(string email, string password)
+        public async Task AddFacultyAsync(Faculty faculty)
         {
-            var admin = await _adminService.LoginAsync(email, password);
-            if (admin == null)
+            _db.Faculties.Add(faculty);
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task AddRegistrarAsync(Registrar registrar)
+        {
+            _db.Registrars.Add(registrar);
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<List<Faculty>> GetAllFacultyAsync()
+            => await _db.Faculties.ToListAsync();
+
+        public async Task<List<Registrar>> GetAllRegistrarsAsync()
+            => await _db.Registrars.ToListAsync();
+
+        // ---- Search Faculty ----
+        public async Task<List<Faculty>> SearchFacultyAsync(string name, string department)
+        {
+            var query = _db.Faculties.AsQueryable();
+
+            if (!string.IsNullOrEmpty(name))
+                query = query.Where(f => f.Name.Contains(name));
+
+            if (!string.IsNullOrEmpty(department))
+                query = query.Where(f => f.Department.Contains(department));
+
+            return await query.ToListAsync();
+        }
+
+        // ---- Delete Faculty ----
+        public async Task DeleteFacultyAsync(int id)
+        {
+            var faculty = await _db.Faculties.FindAsync(id);
+            if (faculty != null)
             {
-                ViewBag.Error = "Invalid email or password.";
-                return View();
+                _db.Faculties.Remove(faculty);
+                await _db.SaveChangesAsync();
             }
-            HttpContext.Session.SetInt32("AdminId", admin.AdminId);
-            HttpContext.Session.SetString("Role", "Admin");
-            return RedirectToAction("Dashboard");
         }
 
-        public IActionResult Logout()
+
+        // ---- Search Registrar ----
+        public async Task<List<Registrar>> SearchRegistrarAsync(string name)
         {
-            HttpContext.Session.Clear();
-            return RedirectToAction("Login");
+            var query = _db.Registrars.AsQueryable();
+
+            if (!string.IsNullOrEmpty(name))
+                query = query.Where(r => r.Name.Contains(name));
+
+            return await query.ToListAsync();
         }
 
-        // ---- Dashboard ----
 
-        public async Task<IActionResult> Dashboard()
+        // ---- Delete Registrar ----
+        public async Task DeleteRegistrarAsync(int id)
         {
-            if (HttpContext.Session.GetInt32("AdminId") == null) return RedirectToAction("Login");
-            ViewBag.Faculties = await _adminService.GetAllFacultyAsync();
-            ViewBag.Registrars = await _adminService.GetAllRegistrarsAsync();
-            return View();
-        }
-
-        // ---- Add Faculty ----
-
-        [HttpGet]
-        public IActionResult AddFaculty()
-        {
-            if (HttpContext.Session.GetInt32("AdminId") == null) return RedirectToAction("Login");
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> AddFaculty(Faculty faculty)
-        {
-            if (HttpContext.Session.GetInt32("AdminId") == null) return RedirectToAction("Login");
-            await _adminService.AddFacultyAsync(faculty);
-            TempData["Message"] = "Faculty added successfully.";
-            return RedirectToAction("Dashboard");
-        }
-
-        // ---- Add Registrar ----
-
-        [HttpGet]
-        public IActionResult AddRegistrar()
-        {
-            if (HttpContext.Session.GetInt32("AdminId") == null) return RedirectToAction("Login");
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> AddRegistrar(Registrar registrar)
-        {
-            if (HttpContext.Session.GetInt32("AdminId") == null) return RedirectToAction("Login");
-            await _adminService.AddRegistrarAsync(registrar);
-            TempData["Message"] = "Registrar added successfully.";
-            return RedirectToAction("Dashboard");
-        }
-
-        [HttpGet]
-        public IActionResult RemoveFaculty()
-        {
-            if (HttpContext.Session.GetInt32("AdminId") == null)
-                return RedirectToAction("Login");
-
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> RemoveFaculty(string name, string department)
-        {
-            var result = await _adminService.SearchFacultyAsync(name, department);
-            return View(result);
-        }
-
-        public async Task<IActionResult> DeleteFaculty(int id)
-        {
-            await _adminService.DeleteFacultyAsync(id);
-            TempData["Message"] = "Faculty removed successfully.";
-            return RedirectToAction("Dashboard");
-        }
-
-        [HttpGet]
-        public IActionResult RemoveRegistrar()
-        {
-            if (HttpContext.Session.GetInt32("AdminId") == null)
-                return RedirectToAction("Login");
-
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> RemoveRegistrar(string name)
-        {
-            var result = await _adminService.SearchRegistrarAsync(name);
-            return View(result);
-        }
-
-        public async Task<IActionResult> DeleteRegistrar(int id)
-        {
-            await _adminService.DeleteRegistrarAsync(id);
-            TempData["Message"] = "Registrar removed successfully.";
-            return RedirectToAction("Dashboard");
+            var registrar = await _db.Registrars.FindAsync(id);
+            if (registrar != null)
+            {
+                _db.Registrars.Remove(registrar);
+                await _db.SaveChangesAsync();
+            }
         }
     }
 }
