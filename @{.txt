@@ -13,3 +13,44 @@ public IActionResult Signup()
 
     return View();
 }
+
+
+
+[HttpPost]
+public async Task<IActionResult> Signup(Student student)
+{
+    if (await _studentService.EmailExistsAsync(student.Email))
+    {
+        ViewBag.Error = "Email already registered.";
+
+        // Reload dropdown data
+        ViewBag.Departments = new List<string>
+        {
+            "Computer Science",
+            "Electronics and Communication",
+            "Mechanical",
+            "Civil",
+            "Electrical",
+            "Information Technology"
+        };
+
+        return View(student);
+    }
+
+    await _studentService.RegisterAsync(student);
+    TempData["Success"] = "Account created. Please login.";
+    return RedirectToAction("Login");
+}
+
+
+
+
+<select name="Department" required>
+    <option value="">-- Select Department --</option>
+    @foreach (var dept in ViewBag.Departments)
+    {
+        <option value="@dept" selected="@(Model?.Department == dept)">
+            @dept
+        </option>
+    }
+</select>
