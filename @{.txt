@@ -1,9 +1,69 @@
-div class="form-group">
-                <label asp-for="Department"></label>
-                <select asp-for="Department"
-                        asp-items="@(new SelectList(ViewBag.Departments))"
-                        class="form-control" required>
-                    <option value="">-- Select Department --</option>
-                </select>
-                <span asp-validation-for="Department" class="text-danger"></span>
-            </div>
+[HttpGet]
+public async Task<IActionResult> AddCourse()
+{
+    if (HttpContext.Session.GetInt32("RegistrarId") == null)
+        return RedirectToAction("Login");
+
+    ViewBag.Faculties = await _registrarService.GetAllFacultyAsync();
+
+    ViewBag.Departments = new List<string>
+    {
+        "Computer Science",
+        "Electronics and Communication",
+        "Mechanical Engineering",
+        "Civil Engineering",
+        "Electrical Engineering",
+        "Information Technology"
+    };
+
+    return View();
+}
+
+
+[HttpPost]
+public async Task<IActionResult> AddCourse(Course course)
+{
+    if (HttpContext.Session.GetInt32("RegistrarId") == null)
+        return RedirectToAction("Login");
+
+    if (!ModelState.IsValid)
+    {
+        ViewBag.Faculties = await _registrarService.GetAllFacultyAsync();
+
+        ViewBag.Departments = new List<string>
+        {
+            "Computer Science",
+            "Electronics and Communication",
+            "Mechanical Engineering",
+            "Civil Engineering",
+            "Electrical Engineering",
+            "Information Technology"
+        };
+
+        return View(course);
+    }
+
+    await _registrarService.AddCourseAsync(course);
+    TempData["Message"] = "Course added successfully.";
+    return RedirectToAction("Dashboard");
+}
+
+
+@{
+    var departments = ViewBag.Departments as List<string> ?? new();
+}
+
+<div class="form-group">
+    <label>Department</label>
+
+    <select name="Department" required>
+        <option value="">-- Select Department --</option>
+        @foreach (var dept in departments)
+        {
+            <option value="@dept"
+                    @(Model?.Department == dept ? "selected" : "")>
+                @dept
+            </option>
+        }
+    </select>
+</div>
