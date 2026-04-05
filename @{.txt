@@ -1,114 +1,15 @@
-using Microsoft.AspNetCore.Mvc;
-using UniversityCMS.Models;
-using UniversityCMS.Services;
-
-namespace UniversityCMS.Controllers
+[HttpGet]
+public IActionResult Signup()
 {
-    public class RegistrarController : Controller
+    ViewBag.Departments = new List<string>
     {
-        private readonly RegistrarService _registrarService;
+        "Computer Science",
+        "Electronics and Communication",
+        "Mechanical",
+        "Civil",
+        "Electrical",
+        "Information Technology"
+    };
 
-        public RegistrarController(RegistrarService registrarService)
-        {
-            _registrarService = registrarService;
-        }
-
-        // ---- Auth ----
-
-        [HttpGet]
-        public IActionResult Login() => View();
-
-        [HttpPost]
-        public async Task<IActionResult> Login(string email, string password)
-        {
-            var registrar = await _registrarService.LoginAsync(email, password);
-            if (registrar == null)
-            {
-                ViewBag.Error = "Invalid email or password.";
-                return View();
-            }
-            HttpContext.Session.SetInt32("RegistrarId", registrar.RegistrarId);
-            HttpContext.Session.SetString("RegistrarName", registrar.Name);
-            HttpContext.Session.SetString("Role", "Registrar");
-            return RedirectToAction("Dashboard");
-        }
-
-        public IActionResult Logout()
-        {
-            HttpContext.Session.Clear();
-            return RedirectToAction("Login");
-        }
-
-        // ---- Dashboard ----
-
-        public async Task<IActionResult> Dashboard()
-        {
-            if (HttpContext.Session.GetInt32("RegistrarId") == null) return RedirectToAction("Login");
-            var courses = await _registrarService.GetAllCoursesAsync();
-            return View(courses);
-        }
-
-        // ---- Add Course ----
-
-        [HttpGet]
-        public async Task<IActionResult> AddCourse()
-        {
-            if (HttpContext.Session.GetInt32("RegistrarId") == null) return RedirectToAction("Login");
-            ViewBag.Faculties = await _registrarService.GetAllFacultyAsync();
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> AddCourse(Course course)
-        {
-            if (HttpContext.Session.GetInt32("RegistrarId") == null) return RedirectToAction("Login");
-            await _registrarService.AddCourseAsync(course);
-            TempData["Message"] = "Course added successfully.";
-            return RedirectToAction("Dashboard");
-        }
-
-        // ---- Drop Course ----
-
-        [HttpPost]
-        public async Task<IActionResult> DisableCourse(int courseId)
-        {
-            if (HttpContext.Session.GetInt32("RegistrarId") == null)
-                return RedirectToAction("Login");
-
-            TempData["Message"] = await _registrarService.DisableCourseAsync(courseId);
-
-            return RedirectToAction("Dashboard");
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> EnableCourse(int courseId)
-        {
-            if (HttpContext.Session.GetInt32("RegistrarId") == null)
-                return RedirectToAction("Login");
-
-            TempData["Message"] = await _registrarService.EnableCourseAsync(courseId);
-
-            return RedirectToAction("Dashboard");
-        }
-
-        // ---- View enrolled students per course ----
-
-        public async Task<IActionResult> EnrolledStudents(int courseId)
-        {
-            if (HttpContext.Session.GetInt32("RegistrarId") == null) return RedirectToAction("Login");
-            var enrollments = await _registrarService.GetEnrolledStudentsAsync(courseId);
-            var course = await _registrarService.GetCourseByIdAsync(courseId);
-            ViewBag.CourseName = course?.CourseName ?? "Unknown";
-            return View(enrollments);
-        }
-
-        // ---- Faculty List ----
-
-        public async Task<IActionResult> FacultyList()
-        {
-            if (HttpContext.Session.GetInt32("RegistrarId") == null) return RedirectToAction("Login");
-            var faculties = await _registrarService.GetAllFacultyAsync();
-            return View(faculties);
-        }
-    }
+    return View();
 }
